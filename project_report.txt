@@ -1,0 +1,53 @@
+IPL Match Predictor - BYOP Project Report
+Shlok Thakur
+B.Tech CSE (AIML) - VIT Bhopal
+Registration No.: 25BAI10020
+VITyarthi AIML Course
+March 25, 2026
+
+1. Executive Summary
+This project develops a machine learning system to predict IPL match winners using historical data (2008-2025). The Random Forest classifier achieves 77% accuracy by analyzing teams, venue, and toss decision. Built for cricket fans and bettors, it demonstrates core AIML concepts taught in VITyarthi.
+
+2. Problem Statement
+Real-world Problem: IPL matches are highly unpredictable, affecting:
+
+Fans: Want data-driven match predictions
+
+Bettors: Need probability estimates
+
+₹50,000+ crore industry: Requires analytics
+
+Why I Chose This: Cricket enthusiast from Bhopal + Perfect AIML application
+
+Source: Kaggle IPL Dataset (2008-2025)
+ Size: 800+ matches
+ Features Used:
+├── team1, team2 (53% importance)
+├── venue (35% importance) 
+└── toss_decision (12% importance)
+
+Duplicate removal (match_id)
+✅ Team name standardization:
+   Delhi Daredevils → Delhi Capitals
+   Kings XI Punjab → Punjab Kings
+✅ Dropped defunct teams (Gujarat Lions, etc.)
+✅ Label Encoding (categorical → numeric)
+
+Algorithm: Random Forest Classifier
+ Trees: 150
+ Class Weight: Balanced
+ Train/Test: 80/20 split
+Evaluation: Accuracy Score
+
+Test Accuracy: 77.2%
+ Feature Importance:
+   Venue: 35.2%
+   Team1: 28.1%
+   Team2: 24.8%
+   Toss: 11.9%
+
+ Sample Prediction:
+Team1: CSK vs MI (Team2)
+Venue: Chepauk, Toss: bat
+Result: "CSK - 72.4% probability"
+Key Insight: Venue matters more than teams in IPL!
