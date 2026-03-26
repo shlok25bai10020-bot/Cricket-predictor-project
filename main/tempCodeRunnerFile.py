@@ -110,15 +110,8 @@ class cricketPredictor:
             print("\n  Input Error: Spelling must match 'Available Teams' list exactly.")
 def main():
     workingModel = cricketPredictor()
-    print("--- Downloading IPL dataset from Kaggle ---")
-    path = kagglehub.dataset_download("chaitu20/ipl-dataset2008-2025")
-    csv_files = [f for f in os.listdir(path) if f.endswith('.csv')]
-    
-    if not csv_files:
-        print("Error: No CSV files found in the downloaded dataset.")
-        return
-    full_path = os.path.join(path, csv_files[0])
-    workingModel.setup_system(full_path)
+    workingModel.setup_system("ipl_data.csv")
+
     while True:
         print("\n[1] Predict Match  [2] Exit")
         choice = input("Select: ")
