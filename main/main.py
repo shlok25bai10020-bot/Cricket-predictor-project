@@ -6,25 +6,29 @@ from sklearn.ensemble import RandomForestClassifier
 import kagglehub
 from sklearn.preprocessing import LabelEncoder
 warnings.filterwarnings('ignore')
+
 class cricketPredictor:
     def download_dataset(self):
-        print("---Downloading IPL dataset from dataset from Kaggle---")
-        path=kagglehub.dataset_download("chaitu20/ipl-dataset2008-2025")
-        print(f"Dataset downloaded to:{path}")
+        print("---Downloading IPL dataset from Kaggle---")
+        path = kagglehub.dataset_download("chaitu20/ipl-dataset2008-2025")
+        print(f"Dataset downloaded to: {path}")
         csv_files = [f for f in os.listdir(path) if f.endswith('.csv')]
         print(f"Available CSV files: {csv_files}")
+
     def setup_system(self, data_file="ipl_data.csv"):
         self.data_file = data_file
         self.isTrained = False
         self.encoders = {}
         self.model = None
-        print(f"--- System Booting: Loading {self.data_file} ---")    
+        self.valid_teams = []
+        self.valid_venues = []
+        print(f"--- System Booting: Loading {self.data_file} ---")     
         if os.path.exists(self.data_file):
             self.train_model()
         else:
             print(f"Error: '{self.data_file}' not found in directory.")
 
-    def cleanData(self, df):  #df stands for DataFrame
+    def cleanData(self, df):
         if 'match_id' in df.columns:
             df = df.drop_duplicates(subset=['match_id'], keep='first').copy()
         df = df.rename(columns={
@@ -33,14 +37,14 @@ class cricketPredictor:
             'match_won_by': 'winner'
         })
         teamNameChanges = {
-            'Delhi Daredevils': 'Delhi Capitals',  #Name Change
-            'Kings XI Punjab': 'Punjab Kings',     #Name Change
-            'Deccan Chargers': 'Sunrisers Hyderabad', #Name Change
-            'Pune Warriors': 'Dropped',               #Team Is Dropped
-            'Gujarat Lions': 'Dropped',                #Team Is Dropped
-            'Kochi Tuskers Kerala': 'Dropped',          #Team Is Dropped
-            'Rising Pune Supergiant': 'Dropped',        #Team Is Dropped
-            'Rising Pune Supergiants': 'Dropped'          #Team Is Dropped
+            'Delhi Daredevils': 'Delhi Capitals',
+            'Kings XI Punjab': 'Punjab Kings',
+            'Deccan Chargers': 'Sunrisers Hyderabad',
+            'Pune Warriors': 'Dropped',
+            'Gujarat Lions': 'Dropped',
+            'Kochi Tuskers Kerala': 'Dropped',
+            'Rising Pune Supergiant': 'Dropped',
+            'Rising Pune Supergiants': 'Dropped'
         }
         df.replace({'team1': teamNameChanges, 'team2': teamNameChanges}, inplace=True)
         if 'team1' in df.columns and 'team2' in df.columns:
@@ -60,6 +64,11 @@ class cricketPredictor:
                 le = LabelEncoder()
                 df[col] = le.fit_transform(df[col].astype(str))
                 self.encoders[col] = le
+            
+            # Store valid lists after encoding
+            self.valid_teams = sorted(self.encoders['team1'].classes_.tolist())
+            self.valid_venues = sorted(self.encoders['venue'].classes_.tolist())
+            
             X = df[features]
             y = df['winner']
             X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
@@ -67,27 +76,30 @@ class cricketPredictor:
                 n_estimators=150, 
                 random_state=42, 
                 max_depth=None, 
-                class_weight='balanced'
+                class_weight='balanced',
+                min_samples_split=5
             )
             self.model.fit(X_train, y_train)
             acc = self.model.score(X_test, y_test)
             print(f" Training Complete. Model Accuracy: {acc*100:.1f}%")
             importances = dict(zip(features, self.model.feature_importances_))
-            print(f" Logic used (Feature Importance): {importances}\n")
+            print(f" Logic used (Feature Importance): {importances}")
+            print(f"\nValid Teams ({len(self.valid_teams)}): {', '.join(self.valid_teams)}")
+            print(f"Valid Venues ({len(self.valid_venues)}): {', '.join(self.valid_venues)}\n")
             self.isTrained = True
         except Exception as e:
             print(f" Boot failed. Error: {e}")
             self.isTrained = False
+
     def predict_match(self):
         if not self.isTrained:
             print("System not ready.")
             return
-        print("\n"  + " " + "MATCH PREDICTION ENGINE" + " " )
+        print("\n" + " " + "MATCH PREDICTION ENGINE" + " " )
         print("-" * 35)
+        print(f"Available Teams: {', '.join(self.valid_teams)}")
+        print(f"Available Venues: {', '.join(self.valid_venues)}")
         try:
-            validTeams = sorted(list(self.encoders['team1'].classes_))
-            print(f"Available Teams: {', '.join(validTeams)}")
-            
             t1 = input("\nEnter Team 1 (Batting First): ").strip()
             t2 = input("Enter Team 2 (Bowling First): ").strip()
             venue = input("Enter Venue: ").strip()
@@ -106,8 +118,9 @@ class cricketPredictor:
             print(f" PROJECTED WINNER: {winner_name}")
             print(f" PROBABILITY: {confidence:.1f}%")
             print("*"*40)
-        except ValueError:
-            print("\n  Input Error: Spelling must match 'Available Teams' list exactly.")
+        except ValueError as e:
+            print(f"\nInput Error: '{e}'. Spelling must match available teams/venues/toss exactly (case-sensitive).")
+
 def main():
     workingModel = cricketPredictor()
     print("--- Downloading IPL dataset from Kaggle ---")
